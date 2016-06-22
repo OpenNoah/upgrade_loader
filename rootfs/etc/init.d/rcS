@@ -1,0 +1,69 @@
+#!/bin/sh
+
+# mount filesystems
+/bin/mount -t proc /proc /proc
+/bin/mount -t sysfs sysfs /sys
+/bin/mount -t tmpfs tmpfs /dev
+
+# rw
+/bin/mount -o remount rw /
+
+# create necessary devices
+/bin/mknod /dev/console c 5 1
+/bin/mknod /dev/null c 1 3
+/bin/mkdir /dev/pts
+/bin/mknod /dev/audio c 14 4
+/bin/mknod /dev/jz-ts c 10 16
+/bin/mknod /dev/jz_ts c 10 16
+/bin/mknod /dev/rtc c 10 135
+/bin/mkdir /dev/sound/
+ln -s /dev/dsp   /dev/sound/dsp
+
+echo "Starting udevd ..."
+#/bin/free
+
+/sbin/udevd --daemon
+/sbin/udevstart
+
+# mount filesystems
+/bin/mount -a
+
+#/bin/free
+# networking
+/sbin/ifconfig lo 127.0.0.1 up
+
+# telnet server
+#/sbin/telnetd &
+
+# NFS mounting
+#/sbin/portmap
+
+# mixer volume
+/usr/bin/mixer vol 80 > /dev/null 2>&1
+
+# set the system time from the hardware clock
+/sbin/hwclock -s
+
+# run cpufreqd
+#/cpufreqd/sbin/cpufreqd
+
+# mount mtd partitions
+#/bin/mount -t yaffs2 /dev/mtdblock2 /mnt/mtdblock2
+#/bin/mount -t yaffs2 /dev/mtdblock3 /mnt/mtdblock3
+#/bin/mount -t vfat /dev/mtdblock5 /mnt/mtdblock5
+
+# run qtopia
+#/usr/bin/runqpe
+#/sbin/insmod   ubi.ko mtd=8
+#/bin/mount -t vfat -o codepage=936,iocharset=cp936 /dev/mtdblock9 /mnt/UsrDisk
+
+#ln -s /dev/mmcblk0p1  /dev/mmca1
+#ln -s /dev/mtdblock8  /dev/ssfdc1
+
+#MMC_STATUS=`cat /proc/jz/mmc`
+#UDC_STATUS=`cat /proc/jz/udc`
+
+#if [ $UDC_STATUS = "INSERT_POWER" ];then
+#        /sbin/insmod /lib/modules/jz4730_udc.o  udc_debug=1
+#        /sbin/insmod /lib/modules/g_file_storage.o file=/dev/ssfdc1
+#fi
