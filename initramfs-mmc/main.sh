@@ -2,6 +2,7 @@
 export PATH=$PATH:/usr/local/sbin
 insmod /lib/modules/ubi.ko
 insmod /lib/modules/ubifs.ko
+#modprobe ubifs
 
 # Mount memory card
 mount -t vfat /dev/mmcblk0p1 /mnt/mmc

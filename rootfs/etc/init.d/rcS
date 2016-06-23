@@ -52,14 +52,6 @@ echo "Starting udevd ..."
 #/bin/mount -t yaffs2 /dev/mtdblock3 /mnt/mtdblock3
 #/bin/mount -t vfat /dev/mtdblock5 /mnt/mtdblock5
 
-# run qtopia
-#/usr/bin/runqpe
-#/sbin/insmod   ubi.ko mtd=8
-#/bin/mount -t vfat -o codepage=936,iocharset=cp936 /dev/mtdblock9 /mnt/UsrDisk
-
-#ln -s /dev/mmcblk0p1  /dev/mmca1
-#ln -s /dev/mtdblock8  /dev/ssfdc1
-
 #MMC_STATUS=`cat /proc/jz/mmc`
 #UDC_STATUS=`cat /proc/jz/udc`
 
@@ -67,3 +59,5 @@ echo "Starting udevd ..."
 #        /sbin/insmod /lib/modules/jz4730_udc.o  udc_debug=1
 #        /sbin/insmod /lib/modules/g_file_storage.o file=/dev/ssfdc1
 #fi
+
+#ps > /tmp/.proclist
