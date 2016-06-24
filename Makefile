@@ -27,7 +27,7 @@ $(TARG): $(PKGCFG) $(INIT:%=uImage%) $(OBJS)
 mnt: $(TARG) init.tar.bz2
 	mkdir -p mnt
 	mount -t vfat /dev/sdd1 mnt
-	cp -a $(TARG) mnt/
+	cp -a $(TARG) $(INIT:%=uImage%) mnt/
 	mkdir -p mnt/rootfs
 	cp -a init.tar.bz2 mnt/rootfs/
 	umount -l mnt

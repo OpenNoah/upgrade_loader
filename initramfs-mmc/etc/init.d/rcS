@@ -62,10 +62,10 @@ echo "Starting udevd ..."
 
 #ps > /tmp/.proclist
 
-echo "Press any key in 3 seconds to cancel script."
+echo "Press any key in 3 seconds to cancel executing script."
 read -s -n 1 -t 3 var && exit
 
 /main.sh
 
-echo "Press any key in 3 seconds to cancel reboot."
+echo "Press any key in 3 seconds to cancel rebooting."
 read -s -n 1 -t 3 var || reboot
