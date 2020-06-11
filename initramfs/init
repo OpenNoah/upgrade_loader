@@ -34,7 +34,6 @@ done
 
 # Try to mount a fat32 partition from SD card
 if [ -b /dev/mmcblk0 ]; then
-	mkdir -p /mnt/mmc
 	for f in /dev/mmcblk0*; do
 		mount $f /mnt/mmc -t vfat -o iocharset=cp936,codepage=936 && break
 	done
@@ -44,7 +43,6 @@ fi
 img=/mnt/mmc/upgrade.bin
 if [ -f $img ]; then
 	# Find section to be mounted on root
-	mkdir -p /mnt/root
 	pkginfo $img | tail -n+2 | while read idx ver dev fs off size crc; do (
 		set -e
 		[ x"$dev" == x"/" ]

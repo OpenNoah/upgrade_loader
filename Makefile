@@ -32,6 +32,10 @@ CLEAN	+= initfs.bin
 initfs.bin:
 	sudo ./initfs.sh
 
+CLEAN	+= vmlinux.bin
+vmlinux.bin: uImage-base
+	tail -c+65 $< | zcat > $@
+
 CLEAN	+= vmlinux.bin.head
 vmlinux.bin.head: vmlinux.bin
 	dd if=$< of=$@ count=1 bs=$(shell bash -c "grep -ab -m 1 -o -F $$'\x1F\x8B\x08' $< | head -1 | cut -f 1 -d :")

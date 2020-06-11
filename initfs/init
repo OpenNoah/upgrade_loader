@@ -34,7 +34,6 @@ done
 
 # Try to mount a fat32 partition from SD card
 if [ -b /dev/mmcblk0 ]; then
-	mkdir -p /mnt/mmc
 	for f in /dev/mmcblk0*; do
 		mount $f /mnt/mmc -t vfat -o iocharset=cp936,codepage=936 && break
 	done
@@ -47,7 +46,6 @@ PS1="(initramfs) \w \$ " exec /bin/sh
 if [ -f /mnt/mmc/upgrade.bin ]; then
 	lo=$(losetup -f)
 	losetup -fo 2048 /mnt/mmc/upgrade.bin
-	mkdir -p /mnt/root
 	mount -t ext2 -o ro $lo /mnt/root
 fi
 
