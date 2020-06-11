@@ -4,14 +4,15 @@
 # Created by zhiyb @ GT-Soft
 #
 
-PKGCFG = pkg.cfg
-LEBSIZE = 516096
-PAGESIZE = 4096
+TYPE	?= np1380
 
-MKPKG = ./mkpkg/mkpkg
+PKGCFG	= $(TYPE)/pkg.cfg
+BIN	= upgrade_$(TYPE).bin
 
-CLEAN	= upgrade.bin
-upgrade.bin: $(PKGCFG) $(MKPKG) uImage initfs.bin
+MKPKG	= ./mkpkg/mkpkg
+
+CLEAN	= $(BIN)
+$(BIN): $(PKGCFG) $(MKPKG) uImage initfs.bin
 	$(MKPKG) --type=np1000 --create $< $@
 
 ./mkpkg/mkpkg:
@@ -33,7 +34,7 @@ initfs.bin:
 	sudo ./initfs.sh
 
 CLEAN	+= vmlinux.bin
-vmlinux.bin: uImage-base
+vmlinux.bin: $(TYPE)/uImage-base
 	tail -c+65 $< | zcat > $@
 
 CLEAN	+= vmlinux.bin.head

@@ -1,4 +1,5 @@
 *.bin
 *.bin.*
 *.gz
-uImage
+uImage*
+pkg.cfg
