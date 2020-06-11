@@ -10,8 +10,10 @@ mkdir /dev/pts
 mknod /dev/console c 5 1
 mknod /dev/null c 1 3
 
-udevd --daemon
+#udevd --daemon
 udevstart
+
+echo -e '\033[0m\033[2J\033[HSecond stage initfs loader' > /dev/tty0
 
 # Setup USB network for debugging
 insmod /lib/modules/jz4740_udc.ko
@@ -24,6 +26,7 @@ ip route add default via 192.168.2.1
 telnetd -l /bin/sh
 
 # Wait for SD card
+echo 'Detecting SD card...' > /dev/tty0
 timeout=20
 until [ -b /dev/mmcblk0 ]; do
 	sleep 1
@@ -34,12 +37,14 @@ done
 
 # Try to mount a fat32 partition from SD card
 if [ -b /dev/mmcblk0 ]; then
+	echo 'Mounting SD card...' > /dev/tty0
 	for f in /dev/mmcblk0*; do
 		mount $f /mnt/mmc -t vfat -o iocharset=cp936,codepage=936 && break
 	done
 fi
 
 # Drop serial port to init shell
+echo 'Dropped to serial port console' > /dev/tty0
 PS1="(initramfs) \w \$ " exec /bin/sh
 
 # Check upgrade.bin exists
