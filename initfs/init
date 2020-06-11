@@ -1,0 +1,66 @@
+#!/bin/sh
+
+# Mount file systems
+mount -t proc /proc /proc
+mount -t sysfs sysfs /sys
+mount -t tmpfs tmpfs /dev
+
+# Create essential devices
+mkdir /dev/pts
+mknod /dev/console c 5 1
+mknod /dev/null c 1 3
+
+udevd --daemon
+udevstart
+
+# Setup USB network for debugging
+insmod /lib/modules/jz4740_udc.ko
+insmod /lib/modules/g_ether.ko
+
+ip addr add 192.168.2.2/24 dev usb0
+ip link set usb0 up
+ip route add default via 192.168.2.1
+
+telnetd -l /bin/sh
+
+# Wait for SD card
+timeout=20
+until [ -b /dev/mmcblk0 ]; do
+	sleep 1
+	timeout=`expr $timeout - 1`
+	udevstart
+	[ $timeout == 0 ] && break;
+done
+
+# Try to mount a fat32 partition from SD card
+if [ -b /dev/mmcblk0 ]; then
+	mkdir -p /mnt/mmc
+	for f in /dev/mmcblk0*; do
+		mount $f /mnt/mmc -t vfat -o iocharset=cp936,codepage=936 && break
+	done
+fi
+
+# Drop serial port to init shell
+PS1="(initramfs) \w \$ " exec /bin/sh
+
+# Check upgrade.bin exists
+if [ -f /mnt/mmc/upgrade.bin ]; then
+	lo=$(losetup -f)
+	losetup -fo 2048 /mnt/mmc/upgrade.bin
+	mkdir -p /mnt/root
+	mount -t ext2 -o ro $lo /mnt/root
+fi
+
+# Check rootfs mounted
+if [ -f /mnt/root/init ]; then
+	# Success, prepare to switch root
+	ip link set usb0 down
+	rmmod g_ether
+	rmmod jz4740_udc
+	# Now, switch root
+	PS1="(initramfs) \w \$ " exec /bin/sh
+	exec switch_root -c /dev/console /mnt/root /init
+fi
+
+# Error fallback, drop serial port to init shell
+PS1="(initramfs) \w \$ " exec /bin/sh

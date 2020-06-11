@@ -1,3 +1,0 @@
-# device		dir		type		para		dump	fsck
-# 							para = [ro rw aufo defaults]
-none			/tmp		ramfs		defaults	0	0

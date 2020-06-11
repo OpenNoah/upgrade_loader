@@ -1,2 +1,2 @@
-# upgrade_init
-upgrade.bin for formatting NAND to a single ubi0:rootfs
+# upgrade_loader
+upgrade.bin for loading a rootfs on upgrade.bin

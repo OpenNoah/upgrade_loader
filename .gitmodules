@@ -1,0 +1,3 @@
+[submodule "mkpkg"]
+	path = mkpkg
+	url = https://github.com/OpenNoah/NoahSplit.git
