@@ -15,8 +15,10 @@ CLEAN	= $(BIN)
 $(BIN): $(PKGCFG) $(MKPKG) uImage initfs.bin
 	$(MKPKG) --type=np1000 --create $< $@
 
+ENTRY	= $(shell mkimage -l $(TYPE)/uImage-base | grep 'Entry' | awk '{print $$3}')
+
 ./mkpkg/mkpkg:
-	cd mkpkg; $(MAKE) mkpkg
+	$(MAKE) -C mkpkg
 
 .DELETE_ON_ERROR:
 
@@ -31,6 +33,8 @@ initramfs.gz: initramfs
 
 CLEAN	+= initfs.bin
 initfs.bin:
+	$(MAKE) -C syssw_qt
+	cp syssw_qt/syssw initfs/usr/bin/syssw
 	sudo ./initfs.sh
 
 CLEAN	+= vmlinux.bin
@@ -55,9 +59,10 @@ uImage.gz: vmlinux.bin.new
 
 CLEAN	+= uImage
 uImage: uImage.gz
-	mkimage -A mips -O linux -T kernel -C gzip -a 80010000 -e 802e3800 -n Linux-2.6.24.3 -d $< $@
+	mkimage -A mips -O linux -T kernel -C gzip -a 80010000 -e $(ENTRY) -n Linux-2.6.24.3 -d $< $@
 
 .PHONY: clean
 clean:
 	rm -f $(CLEAN) $(TARG)
-	cd mkpkg; $(MAKE) clean
+	$(MAKE) -C mkpkg clean
+	$(MAKE) -C syssw_qt clean

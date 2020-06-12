@@ -4,6 +4,7 @@
 mount -t proc /proc /proc
 mount -t sysfs sysfs /sys
 mount -t tmpfs tmpfs /dev
+mount -t tmpfs tmpfs /tmp
 
 # Create essential devices
 mkdir /dev/pts
@@ -16,7 +17,7 @@ udevstart
 echo -e '\033[0m\033[2J\033[HSecond stage initfs loader' > /dev/tty0
 
 # Setup USB network for debugging
-insmod /lib/modules/jz4740_udc.ko
+insmod /lib/modules/jz4740_udc.ko use_dma=0
 insmod /lib/modules/g_ether.ko
 
 ip addr add 192.168.2.2/24 dev usb0
@@ -24,6 +25,15 @@ ip link set usb0 up
 ip route add default via 192.168.2.1
 
 telnetd -l /bin/sh
+
+. /etc/profile
+
+# Calibrate touch screen
+if [ ! -f /etc/pointercal ]; then
+	echo 'Calibrate touch screen...' > /dev/tty0
+	rm -f /tmp/pointercal
+	ts_calibrate
+fi
 
 # Wait for SD card
 echo 'Detecting SD card...' > /dev/tty0
@@ -43,27 +53,9 @@ if [ -b /dev/mmcblk0 ]; then
 	done
 fi
 
+# Show test application
+syssw -qws
+
 # Drop serial port to init shell
 echo 'Dropped to serial port console' > /dev/tty0
-PS1="(initramfs) \w \$ " exec /bin/sh
-
-# Check upgrade.bin exists
-if [ -f /mnt/mmc/upgrade.bin ]; then
-	lo=$(losetup -f)
-	losetup -fo 2048 /mnt/mmc/upgrade.bin
-	mount -t ext2 -o ro $lo /mnt/root
-fi
-
-# Check rootfs mounted
-if [ -f /mnt/root/init ]; then
-	# Success, prepare to switch root
-	ip link set usb0 down
-	rmmod g_ether
-	rmmod jz4740_udc
-	# Now, switch root
-	PS1="(initramfs) \w \$ " exec /bin/sh
-	exec switch_root -c /dev/console /mnt/root /init
-fi
-
-# Error fallback, drop serial port to init shell
 PS1="(initramfs) \w \$ " exec /bin/sh

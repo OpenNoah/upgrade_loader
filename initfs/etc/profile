@@ -1,0 +1,8 @@
+export TSLIB_TSDEVICE=/dev/jz-ts
+export TSLIB_FBDEVICE=/dev/fb0
+
+export QTDIR=/opt/qt-2.3.10
+export QWS_DISPLAY="LinuxFb:0 VNC:0"
+export QWS_MOUSE_PROTO="TPanel:/dev/jz-ts"
+#export QWS_MOUSE_PROTO="USB:/dev/input/mice TPanel:/dev/jz-ts"
+#export QWS_KEYBOARD="TTY:/dev/input/event0"

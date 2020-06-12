@@ -16,7 +16,7 @@ udevstart
 echo -e '\033[0m\033[2J\033[HFirst stage initramfs loader' > /dev/tty0
 
 # Setup USB network for debugging
-insmod /lib/modules/jz4740_udc.ko
+insmod /lib/modules/jz4740_udc.ko use_dma=0
 insmod /lib/modules/g_ether.ko
 
 ip addr add 192.168.2.2/24 dev usb0
@@ -61,11 +61,10 @@ fi
 if [ -f /mnt/root/init ]; then
 	# Success, confirm switching root
 	echo "Press any key in 1 second to abort root switching..."
-	unset key
-	read -t1 -n1 key
-	if [ x"$key" == x ]; then
+	if ! read -t1 -n1 key; then
 		# Prepare to switch root
 		echo 'Switching root...' > /dev/tty0
+		killall telnetd
 		ip link set usb0 down
 		rmmod g_ether
 		rmmod jz4740_udc
