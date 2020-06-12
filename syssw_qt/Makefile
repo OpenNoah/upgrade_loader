@@ -1,5 +1,5 @@
-SRC	:= main.cpp
-HDR	:=
+SRC	:= main.cpp mainw.cpp cgucontrol.cpp regs.cpp
+HDR	:= mainw.h cgucontrol.h regs.h
 TRG	:= syssw
 
 MOC_SRC	:= $(HDR:%.h=moc_%.cpp)
@@ -9,7 +9,7 @@ TOP	?= $(CURDIR)/../../build/qt-2.3.10
 INC	+= -I$(TOP)/include -I$(TOP)/src/3rdparty/freetype/include
 LIB	+= -L$(TOP)/lib -Wl,-rpath,/opt/qt-2.3.10/lib -lqte
 DEF	+= -DQWS -D_REENTRANT
-FLAGS	?= -Os -pipe -fno-rtti -fno-exceptions
+FLAGS	?= -Os -pipe -fno-rtti #-fno-exceptions
 #FLAGS	?= -g -Os -pipe -fno-rtti -fno-exceptions
 CROSS	?= mipsel-linux-
 MOC	?= ../../bin/moc
@@ -19,7 +19,7 @@ all: $(TRG)
 
 .PHONY: send
 send: $(TRG)
-	-cat $(TRG) | ncat -l -p 12345 --send-only
+	-cat $(TRG) | ncat np1380 1234 --send-only
 
 $(TRG): $(SRC:%.cpp=%.o)
 	$(CROSS)g++ -s -o $@ $^ $(LIB) $(FLAGS)
