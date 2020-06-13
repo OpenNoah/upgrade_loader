@@ -28,6 +28,12 @@ telnetd -l /bin/sh
 
 . /etc/profile
 
+# More modules
+insmod /lib/modules/ubi.ko
+insmod /lib/modules/ubifs.ko
+
+udevstart
+
 # Calibrate touch screen
 if [ ! -f /etc/pointercal ]; then
 	echo 'Calibrate touch screen...' > /dev/tty0
@@ -53,9 +59,46 @@ if [ -b /dev/mmcblk0 ]; then
 	done
 fi
 
-# Show test application
+# Mount NAND ubi rootfs
+echo 'Attaching NAND rootfs...' > /dev/tty0
+mtd="$(cat /proc/mtd | fgrep ROOT)"
+if ubiattach -m "${mtd:3:1}" /dev/ubi_ctrl; then
+	udevstart
+fi
+
+# Show GUI application
+echo 'Starting GUI application...' > /dev/tty0
+rm -f /tmp/init
 syssw -qws
 
+# Check rootfs
+echo 'Checking rootfs...' > /dev/tty0
+init="$(cat /tmp/init)"
+if [ -x "/mnt/root/$init" ] && [ -f "/mnt/root/$init" ]; then
+	# Prepare to switch root
+	echo "Switching root: /mnt/root $init" > /dev/tty0
+	killall telnetd
+	ip link set usb0 down
+	rmmod g_ether
+	rmmod jz4740_udc
+	# Now, switch root
+	umount -l /mnt/mmc
+	umount -l /tmp
+	umount -l /dev
+	umount -l /sys
+	umount -l /proc
+	cd /mnt/root
+	pivot_root . tmp
+	# Unmount old root and free loop device
+	exec chroot . sh -c "
+	umount -l /tmp
+	mount -t tmpfs tmpfs /tmp
+	mknod /tmp/loop0 b 7 0
+	losetup -d /tmp/loop0
+	umount -l /tmp
+	exec $init" < dev/console > dev/console 2>&1
+fi
+
 # Drop serial port to init shell
-echo 'Dropped to serial port console' > /dev/tty0
+echo -e '\033[1;31mDropped to serial port console' > /dev/tty0
 PS1="(initramfs) \w \$ " exec /bin/sh

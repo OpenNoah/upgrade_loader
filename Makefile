@@ -18,7 +18,7 @@ $(BIN): $(PKGCFG) $(MKPKG) uImage initfs.bin
 ENTRY	= $(shell mkimage -l $(TYPE)/uImage-base | grep 'Entry' | awk '{print $$3}')
 
 ./mkpkg/mkpkg:
-	$(MAKE) -C mkpkg
+	$(MAKE) -C mkpkg mkpkg
 
 .DELETE_ON_ERROR:
 

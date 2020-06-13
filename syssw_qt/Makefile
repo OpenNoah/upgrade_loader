@@ -1,5 +1,5 @@
-SRC	:= main.cpp mainw.cpp cgucontrol.cpp regs.cpp
-HDR	:= mainw.h cgucontrol.h regs.h
+SRC	:= main.cpp mainw.cpp cgucontrol.cpp regs.cpp nand.cpp bootdialog.cpp
+HDR	:= mainw.h cgucontrol.h regs.h nand.h bootdialog.h
 TRG	:= syssw
 
 MOC_SRC	:= $(HDR:%.h=moc_%.cpp)

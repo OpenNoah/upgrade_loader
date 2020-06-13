@@ -67,43 +67,44 @@ CGUControl::CGUControl(QWidget *parent) : QWidget(parent)
 	info.ext_clk = EXT_CLK;
 	updateValues();
 
-	QGridLayout *glay = new QGridLayout(this, 7, 3, 0, 4);
+	QGridLayout *glay = new QGridLayout(this, 5, 6, 0, 4);
 
-	glay->addWidget(disp.pll_lbl = new QLabel("PLL CLK", this), 0, 0);
-	glay->addWidget(disp.c_lbl = new QLabel("CPU CCLK", this), 1, 0);
-	glay->addWidget(disp.h_lbl = new QLabel("System HCLK", this), 2, 0);
-	glay->addWidget(disp.p_lbl = new QLabel("Peripheral PCLK", this), 3, 0);
-	glay->addWidget(disp.m_lbl = new QLabel("Memory MCLK", this), 4, 0);
-
-	glay->addWidget(disp.pll_clk = new QLabel(this), 0, 1);
-	glay->addWidget(disp.pll_step = new QSlider(0, 15, 1, 1, Qt::Horizontal, this), 0, 2);
+	QHBoxLayout *play = new QHBoxLayout(4);
+	glay->addMultiCellLayout(play, 0, 0, 0, 5);
+	play->addWidget(disp.pll_lbl = new QLabel("PLL", this));
+	play->addWidget(disp.pll_clk = new QLabel(this));
+	play->addWidget(disp.pll_step = new QSlider(0, 15, 1, 1, Qt::Horizontal, this));
 	disp.pll_step->setTickmarks(QSlider::Below);
 	connect(disp.pll_step, SIGNAL(valueChanged(int)), this, SLOT(pllStepChanged(int)));
 
+	glay->addWidget(disp.c_lbl = new QLabel("CPU", this), 1, 0);
 	glay->addWidget(disp.c_clk = new QLabel(this), 1, 1);
 	glay->addWidget(disp.c_div = new QSlider(-9, 0, 1, 1, Qt::Horizontal, this), 1, 2);
 	disp.c_div->setTickmarks(QSlider::Below);
 	connect(disp.c_div, SIGNAL(valueChanged(int)), this, SLOT(cDivChanged(int)));
 
-	glay->addWidget(disp.h_clk = new QLabel(this), 2, 1);
-	glay->addWidget(disp.h_div = new QSlider(-9, 0, 1, 1, Qt::Horizontal, this), 2, 2);
+	glay->addWidget(disp.h_lbl = new QLabel("HCLK", this), 1, 3);
+	glay->addWidget(disp.h_clk = new QLabel(this), 1, 4);
+	glay->addWidget(disp.h_div = new QSlider(-9, 0, 1, 1, Qt::Horizontal, this), 1, 5);
 	disp.h_div->setTickmarks(QSlider::Below);
 	connect(disp.h_div, SIGNAL(valueChanged(int)), this, SLOT(hDivChanged(int)));
 
-	glay->addWidget(disp.p_clk = new QLabel(this), 3, 1);
-	glay->addWidget(disp.p_div = new QSlider(-9, 0, 1, 1, Qt::Horizontal, this), 3, 2);
+	glay->addWidget(disp.p_lbl = new QLabel("PCLK", this), 2, 0);
+	glay->addWidget(disp.p_clk = new QLabel(this), 2, 1);
+	glay->addWidget(disp.p_div = new QSlider(-9, 0, 1, 1, Qt::Horizontal, this), 2, 2);
 	disp.p_div->setTickmarks(QSlider::Below);
 	connect(disp.p_div, SIGNAL(valueChanged(int)), this, SLOT(pDivChanged(int)));
 
-	glay->addWidget(disp.m_clk = new QLabel(this), 4, 1);
-	glay->addWidget(disp.m_div = new QSlider(-9, 0, 1, 1, Qt::Horizontal, this), 4, 2);
+	glay->addWidget(disp.m_lbl = new QLabel("MCLK", this), 2, 3);
+	glay->addWidget(disp.m_clk = new QLabel(this), 2, 4);
+	glay->addWidget(disp.m_div = new QSlider(-9, 0, 1, 1, Qt::Horizontal, this), 2, 5);
 	disp.m_div->setTickmarks(QSlider::Below);
 	connect(disp.m_div, SIGNAL(valueChanged(int)), this, SLOT(mDivChanged(int)));
 
-	glay->addMultiCellWidget(disp.warning = new QListBox(this), 5, 5, 0, 2);
+	glay->addMultiCellWidget(disp.warning = new QListBox(this), 3, 3, 0, 5);
 
 	QHBoxLayout *blay = new QHBoxLayout;
-	glay->addMultiCellLayout(blay, 6, 6, 0, 2);
+	glay->addMultiCellLayout(blay, 4, 4, 0, 5);
 	blay->addWidget(disp.test = new QPushButton(tr("性能测试"), this));
 	connect(disp.test, SIGNAL(clicked()), this, SLOT(test()));
 	blay->addWidget(disp.apply = new QPushButton(tr("应用"), this));
@@ -307,11 +308,11 @@ void CGUControl::test()
 
 void CGUControl::updateDisplay()
 {
-	disp.pll_clk->setText(QString("%1 MHz").arg(info.pll_clk / MHZ));
-	disp.c_clk->setText(QString("%1 MHz").arg(info.c_clk() / MHZ, 0, 'f', 2));
-	disp.h_clk->setText(QString("%1 MHz").arg(info.h_clk() / MHZ, 0, 'f', 2));
-	disp.p_clk->setText(QString("%1 MHz").arg(info.p_clk() / MHZ, 0, 'f', 2));
-	disp.m_clk->setText(QString("%1 MHz").arg(info.m_clk() / MHZ, 0, 'f', 2));
+	disp.pll_clk->setText(QString("%1 MHz").arg(info.pll_clk / MHZ, 0, 'f', 1));
+	disp.c_clk->setText(QString("%1").arg(info.c_clk() / MHZ, 0, 'f', 1));
+	disp.h_clk->setText(QString("%1").arg(info.h_clk() / MHZ, 0, 'f', 1));
+	disp.p_clk->setText(QString("%1").arg(info.p_clk() / MHZ, 0, 'f', 1));
+	disp.m_clk->setText(QString("%1").arg(info.m_clk() / MHZ, 0, 'f', 1));
 	validate();
 }
 
@@ -340,13 +341,13 @@ void CGUControl::validate()
 	if (info.pll_clk > MAX_PLL_CLK) {
 		info.warn = 1;
 		disp.pll_lbl->setBackgroundColor(Qt::yellow);
-		str_warn << QString("Maximum PLL frequency %1 MHz\n").arg(MAX_PLL_CLK / MHZ);
+		str_warn << tr("PLL 频率上限 %1 MHz").arg(MAX_PLL_CLK / MHZ);
 	}
 	// Maximum MCLK frequency
 	if (info.m_clk() > MAX_MCLK) {
 		info.warn = 1;
 		disp.m_lbl->setBackgroundColor(Qt::yellow);
-		str_warn << QString("Maximum MCLK frequency %1 MHz\n").arg(MAX_MCLK / MHZ);
+		str_warn << tr("MCLK 频率上限 %1 MHz").arg(MAX_MCLK / MHZ);
 	}
 	// CCLK must be integral multiple of HCLK
 	float ratio = info.c_clk() / info.h_clk();
@@ -354,7 +355,7 @@ void CGUControl::validate()
 		info.err = 1;
 		disp.c_lbl->setBackgroundColor(Qt::red);
 		disp.h_lbl->setBackgroundColor(Qt::red);
-		str_err << "CCLK must be integral multiple of HCLK\n";
+		str_err << tr("CCLK 必须是 HCLK 的整数倍");
 	}
 	// Frequency ratio of CCLK and HCLK cannot be 24 or 32
 	int iratio = int(round(ratio));
@@ -362,7 +363,7 @@ void CGUControl::validate()
 		info.err = 1;
 		disp.c_lbl->setBackgroundColor(Qt::red);
 		disp.h_lbl->setBackgroundColor(Qt::red);
-		str_err << "Ratio of CCLK and HCLK cannot be 24 or 32\n";
+		str_err << tr("CCLK 和 HCLK 的比例不能是 24 或 32");
 	}
 	// HCLK must be equal to or twice of MCLK
 	ratio = info.h_clk() / info.m_clk();
@@ -370,7 +371,7 @@ void CGUControl::validate()
 		info.err = 1;
 		disp.h_lbl->setBackgroundColor(Qt::red);
 		disp.m_lbl->setBackgroundColor(Qt::red);
-		str_err << "HCLK must be equal to or twice of MCLK\n";
+		str_err << tr("HCLK 必须是 MCLK 的整数倍");
 	}
 	// HCLK must be integral multiple of PCLK
 	ratio = info.h_clk() / info.p_clk();
@@ -378,7 +379,7 @@ void CGUControl::validate()
 		info.err = 1;
 		disp.h_lbl->setBackgroundColor(Qt::red);
 		disp.p_lbl->setBackgroundColor(Qt::red);
-		str_err << "HCLK must integral multiple of PCLK\n";
+		str_err << tr("HCLK 必须是 PCLK 的整数倍");
 	}
 	// MCLK must be integral multiple of PCLK
 	ratio = info.m_clk() / info.p_clk();
@@ -386,7 +387,7 @@ void CGUControl::validate()
 		info.err = 1;
 		disp.m_lbl->setBackgroundColor(Qt::red);
 		disp.p_lbl->setBackgroundColor(Qt::red);
-		str_err << "MCLK must integral multiple of PCLK\n";
+		str_err << tr("MCLK 必须是 PCLK 的整数倍");
 	}
 
 	disp.warning->insertStringList(str_err);
