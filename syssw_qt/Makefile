@@ -1,5 +1,5 @@
-SRC	:= main.cpp mainw.cpp cgucontrol.cpp regs.cpp nand.cpp bootdialog.cpp
-HDR	:= mainw.h cgucontrol.h regs.h nand.h bootdialog.h
+SRC	:= main.cpp mainw.cpp cgucontrol.cpp regs.cpp bootdialog.cpp boot.cpp
+HDR	:= mainw.h cgucontrol.h regs.h bootdialog.h boot.h
 TRG	:= syssw
 
 MOC_SRC	:= $(HDR:%.h=moc_%.cpp)
@@ -9,8 +9,7 @@ TOP	?= $(CURDIR)/../../build/qt-2.3.10
 INC	+= -I$(TOP)/include -I$(TOP)/src/3rdparty/freetype/include
 LIB	+= -L$(TOP)/lib -Wl,-rpath,/opt/qt-2.3.10/lib -lqte
 DEF	+= -DQWS -D_REENTRANT
-FLAGS	?= -Os -pipe -fno-rtti #-fno-exceptions
-#FLAGS	?= -g -Os -pipe -fno-rtti -fno-exceptions
+FLAGS	?= -Os -pipe -fno-rtti
 CROSS	?= mipsel-linux-
 MOC	?= ../../bin/moc
 

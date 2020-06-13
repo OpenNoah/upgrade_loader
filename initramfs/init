@@ -50,7 +50,7 @@ if [ -f $img ]; then
 	echo 'Mounting second stage initfs...' > /dev/tty0
 	pkginfo $img | tail -n+2 | while read idx ver dev fs off size crc; do (
 		set -e
-		[ x"$dev" == x"/" ]
+		[ x"$dev" == x"/init" ]
 		lo=$(losetup -f)
 		losetup -fo $(($off)) $img
 		mount -t ext2 -o ro $lo /mnt/root || losetup -d "$lo"
