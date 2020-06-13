@@ -88,8 +88,8 @@ void BootDialog::init()
 {
 	inits << "/init";
 	inits << "/init.sh";
-	inits << "/sbin/init";
 	inits << "/linuxrc";
+	inits << "/sbin/init";
 }
 
 bool BootDialog::BootCheck(QString cmd, unsigned long off)
