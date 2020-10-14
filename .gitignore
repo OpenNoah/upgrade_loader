@@ -1,5 +1,6 @@
 *.bin
 *.bin.*
 *.gz
+*.ipk
 uImage*
 pkg.cfg

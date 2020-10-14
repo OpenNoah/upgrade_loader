@@ -43,6 +43,7 @@ fi
 
 # Wait for SD card
 echo 'Detecting SD card...' > /dev/tty0
+# Not checking /proc/jz/mmc because this FS should be loaded from SD card
 timeout=20
 until [ -b /dev/mmcblk0 ]; do
 	sleep 1

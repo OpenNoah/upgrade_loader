@@ -15,16 +15,6 @@ udevstart
 
 echo -e '\033[0m\033[2J\033[HFirst stage loader' > /dev/tty0
 
-# Setup USB network for debugging
-insmod /lib/modules/jz4740_udc.ko use_dma=0
-insmod /lib/modules/g_ether.ko
-
-ip addr add 192.168.2.2/24 dev usb0
-ip link set usb0 up
-ip route add default via 192.168.2.1
-
-telnetd -l /bin/sh
-
 # Wait for SD card
 echo 'Detecting SD card...' > /dev/tty0
 if [ "$(cat /proc/jz/mmc)" == "INSERT" ]; then
@@ -59,10 +49,6 @@ if [ -f /mnt/root/init ]; then
         if ! read -t1 -n1 key; then
                 # Prepare to switch root
                 echo 'Switching root...' > /dev/tty0
-                killall telnetd
-                ip link set usb0 down
-                rmmod g_ether
-                rmmod jz4740_udc
                 # Now, switch root
                 umount -l /mnt/mmc
                 umount -l /dev
@@ -84,10 +70,6 @@ echo "Press any key in 1 second to abort root switching..."
 if ! read -t1 -n1 key; then
         # Prepare to switch root
         echo 'Switching root...' > /dev/tty0
-        killall telnetd
-        ip link set usb0 down
-        rmmod g_ether
-        rmmod jz4740_udc
         # Now, switch root
         umount -l /mnt/mmc
         umount -l /dev
@@ -95,6 +77,16 @@ if ! read -t1 -n1 key; then
         umount -l /proc
         exec /bin/busybox init
 fi
+
+# Setup USB network for debugging
+insmod /lib/modules/2.6.24.3/kernel/drivers/usb/gadget/jz4740_udc.ko use_dma=0
+insmod /lib/modules/2.6.24.3/kernel/drivers/usb/gadget/g_ether.ko
+
+ip addr add 192.168.2.2/24 dev usb0
+ip link set usb0 up
+ip route add default via 192.168.2.1
+
+telnetd -l /bin/sh
 
 # Error fallback, drop serial port to init shell
 echo -e '\033[1;31mLoader failed!' > /dev/tty0
