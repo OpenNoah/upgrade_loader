@@ -35,8 +35,8 @@ if [ -b /dev/mmcblk0 ]; then
         done
 fi
 
-# Check upgrade.bin exists
-img=/mnt/mmc/initfs.bin
+# Check next stage loader exists
+img=/mnt/mmc/loaderfs.bin
 if [ -f $img ]; then
         mkdir -p /mnt/root
         mount -t ext2 -o ro $img /mnt/root

@@ -36,9 +36,12 @@ CLEAN	+= initramfs.gz
 initramfs.gz: initramfs
 	(cd initramfs; find . -print | cpio -o -H newc -R 0:0) | gzip -9 > $@
 
-CLEAN	+= initfs.bin loaderfs.bin
-initfs.bin loaderfs.bin: %.bin:
+.PHONY: build-syssw_qt
+build-syssw_qt:
 	$(MAKE) -C syssw_qt
+
+CLEAN	+= initfs.bin loaderfs.bin
+initfs.bin loaderfs.bin: %.bin: | build-syssw_qt
 	cp syssw_qt/syssw $*/usr/bin/syssw
 	sudo ./initfs.sh $*
 
