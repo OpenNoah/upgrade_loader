@@ -12,7 +12,7 @@ BIN	= upgrade_$(TYPE).bin
 MKPKG	= ./mkpkg/mkpkg
 
 CLEAN	= $(BIN)
-$(BIN): $(PKGCFG) $(MKPKG) uImage initfs.bin
+$(BIN): $(PKGCFG) $(MKPKG) uImage initfs.bin loaderfs.bin build-ipkg
 	$(MKPKG) --type=np1000 --create $< $@
 
 ENTRY	= $(shell mkimage -l $(TYPE)/uImage-base | grep 'Entry' | awk '{print $$3}')
@@ -21,6 +21,11 @@ ENTRY	= $(shell mkimage -l $(TYPE)/uImage-base | grep 'Entry' | awk '{print $$3}
 	$(MAKE) -C mkpkg mkpkg
 
 .DELETE_ON_ERROR:
+
+.PHONY: build-ipk
+CLEAN	+= $(wildcard sysloader_*.ipk)
+build-ipkg:
+	opkg-build -c -o root -Z gzip ipkg
 
 CLEAN	+= init.tar.bz2
 init.tar.bz2:
@@ -31,11 +36,11 @@ CLEAN	+= initramfs.gz
 initramfs.gz: initramfs
 	(cd initramfs; find . -print | cpio -o -H newc -R 0:0) | gzip -9 > $@
 
-CLEAN	+= initfs.bin
-initfs.bin:
+CLEAN	+= initfs.bin loaderfs.bin
+initfs.bin loaderfs.bin: %.bin:
 	$(MAKE) -C syssw_qt
-	cp syssw_qt/syssw initfs/usr/bin/syssw
-	sudo ./initfs.sh
+	cp syssw_qt/syssw $*/usr/bin/syssw
+	sudo ./initfs.sh $*
 
 CLEAN	+= vmlinux.bin
 vmlinux.bin: $(TYPE)/uImage-base

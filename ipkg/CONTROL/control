@@ -1,0 +1,13 @@
+Package: sysloader
+Source:
+Version: 0.0.1
+Architecture: mipsel
+Maintainer: Norman Zhi <normanzyb@gmail.com>
+Depends:
+Suggests:
+Conflicts:
+Replaces:
+Section: debug
+Priority: optional
+Homepage: https://github.com/OpenNoah/upgrade_loader
+Description: Special boot manager

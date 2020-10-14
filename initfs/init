@@ -43,13 +43,15 @@ fi
 
 # Wait for SD card
 echo 'Detecting SD card...' > /dev/tty0
-timeout=20
-until [ -b /dev/mmcblk0 ]; do
-	sleep 1
-	timeout=`expr $timeout - 1`
-	udevstart
-	[ $timeout == 0 ] && break;
-done
+if [ "$(cat /proc/jz/mmc)" == "INSERT" ]; then
+	timeout=20
+	until [ -b /dev/mmcblk0 ]; do
+		sleep 1
+		timeout=`expr $timeout - 1`
+		udevstart
+		[ $timeout == 0 ] && break;
+	done
+fi
 
 # Try to mount a fat32 partition from SD card
 if [ -b /dev/mmcblk0 ]; then
@@ -96,7 +98,7 @@ if [ -x "/mnt/root/$init" ] && [ -f "/mnt/root/$init" ]; then
 	mknod /tmp/loop0 b 7 0
 	losetup -d /tmp/loop0
 	umount -l /tmp
-	exec $init" < dev/console > dev/console 2>&1
+	exec $init" < /dev/console > /dev/console 2>&1
 fi
 
 # Drop serial port to init shell
