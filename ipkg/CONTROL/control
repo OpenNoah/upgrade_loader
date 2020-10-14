@@ -1,6 +1,6 @@
 Package: sysloader
 Source:
-Version: 0.0.1
+Version: 0.0.2
 Architecture: mipsel
 Maintainer: Norman Zhi <normanzyb@gmail.com>
 Depends:
