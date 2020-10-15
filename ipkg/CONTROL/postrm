@@ -1,2 +1,2 @@
 #! /bin/sh
-ln -sf bin/busybox /sbin/init
+ln -sf ../bin/busybox /sbin/init
