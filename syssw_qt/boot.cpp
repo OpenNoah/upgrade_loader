@@ -23,6 +23,8 @@ Boot::Boot(QWidget *parent): QWidget(parent)
 	ext2.append(new QDir("/mnt/mmc/rootfs", "*.img", QDir::Name, QDir::Files));
 	for (QDir *dir = ext2.first(); dir != 0; dir = ext2.next()) {
 		const QFileInfoList *list = dir->entryInfoList();
+		if (list == 0)
+			continue;
 		QFileInfo *fi;
 		for (QFileInfoListIterator it(*list); (fi=it.current()); ++it) {
 			QString path(fi->absFilePath());
@@ -41,6 +43,8 @@ Boot::Boot(QWidget *parent): QWidget(parent)
 	upd.append(new QDir("/mnt/mmc", "rootfs*.bin", QDir::Name, QDir::Files));
 	for (QDir *dir = upd.first(); dir != 0; dir = upd.next()) {
 		const QFileInfoList *list = dir->entryInfoList();
+		if (list == 0)
+			continue;
 		QFileInfo *fi;
 		for (QFileInfoListIterator it(*list); (fi=it.current()); ++it) {
 			QString path(fi->absFilePath());
