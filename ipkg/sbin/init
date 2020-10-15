@@ -1,5 +1,8 @@
 #!/bin/sh
 
+#exec > /boot.log 2>&1
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
 # Mount file systems
 mount -t proc /proc /proc
 mount -t sysfs sysfs /sys
@@ -7,8 +10,15 @@ mount -t tmpfs tmpfs /dev
 
 # Create essential devices
 mkdir /dev/pts
+mknod /dev/pts/0 c 136 0
+mknod /dev/pts/1 c 136 1
+mknod /dev/pts/2 c 136 2
+mknod /dev/pts/3 c 136 3
 mknod /dev/console c 5 1
 mknod /dev/null c 1 3
+mknod /dev/tty0 c 4 0
+
+exec > /dev/console 2>&1 < /dev/console
 
 #udevd --daemon
 udevstart
@@ -41,6 +51,8 @@ if [ -f $img ]; then
         mkdir -p /mnt/root
         mount -t ext2 -o ro $img /mnt/root
 fi
+
+sync
 
 # Check rootfs mounted
 if [ -f /mnt/root/init ]; then
@@ -90,4 +102,4 @@ telnetd -l /bin/sh
 
 # Error fallback, drop serial port to init shell
 echo -e '\033[1;31mLoader failed!' > /dev/tty0
-PS1="(initramfs) \w \$ " exec /bin/sh
+PS1="(sysloader) \w \$ " exec /bin/sh
