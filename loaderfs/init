@@ -29,8 +29,8 @@ telnetd -l /bin/sh
 . /etc/profile
 
 # More modules
-insmod /lib/modules/ubi.ko
-insmod /lib/modules/ubifs.ko
+#insmod /lib/modules/ubi.ko
+#insmod /lib/modules/ubifs.ko
 
 udevstart
 
@@ -102,4 +102,4 @@ fi
 
 # Drop serial port to init shell
 echo -e '\033[1;31mDropped to serial port console' > /dev/tty0
-PS1="(initramfs) \w \$ " exec /bin/sh
+PS1="(loaderfs) \w \$ " exec /bin/sh
