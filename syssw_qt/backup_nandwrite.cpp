@@ -66,11 +66,10 @@ static void init_structs()
 static const char *mtd_device;
 static int	mtdoffset = 0;
 static int	quiet = 0;
+static int	noecc = 0;
 static int	writeoob = 0;
 static int	markbad = 1;
 static int	autoplace = 0;
-static int	forcelegacy = 0;
-static int	noecc = 0;
 static int	pad = 0;
 static int	blockalign = 1; /*default to using 16K block size */
 
@@ -95,6 +94,9 @@ int nandwrite_open(std::string &serr, const char *devpath)
 	// Options
 	mtd_device = devpath;
 	mtdoffset = 0;
+	noecc = 0;
+	markbad = 0;
+	autoplace = 0;
 	writeoob = 1;
 	pad = 0;
 
@@ -250,11 +252,32 @@ retry:
 		/* Read Page Data from input file */
 		memcpy(writebuf, &write_buf.front(), readlen);
 
+		/* If data and oob are both uninitialised, skip this block */
+		bool skip = true;
+		for (int i = 0; i < readlen; i++) {
+			if (writebuf[i] != 0xff) {
+				skip = false;
+				break;
+			}
+		}
+
 		/* Read OOB data from input file, exit on failure */
 		if(writeoob) {
 			memcpy(oobreadbuf, &write_buf.front() + readlen, meminfo.oobsize);
+
+			if (skip) {
+				for (int i = 0; i < meminfo.oobsize; i++) {
+					if (oobreadbuf[i] != 0xff) {
+						skip = false;
+						break;
+					}
+				}
+			}
 		}
 		oob.start = mtdoffset;
+
+		if (skip)
+			goto cont;
 
 		// write a page include its oob to nand
 		ioctl(fd, MEMWRITEPAGE, &oob);
@@ -293,6 +316,7 @@ retry:
 			goto retry;
 		}
 
+cont:
 		if(writeoob)
 			imglen -= meminfo.oobsize;
 		imglen -= readlen;

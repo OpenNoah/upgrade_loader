@@ -459,6 +459,15 @@ void Backup::nandwrite(QString op, QString sfin, QString smtd, uint32_t size)
 	int nandwrite_write(std::string &serr, const std::vector<char> &write_buf);
 	void nandwrite_close();
 
+	if (smtd == "/dev/mtd0") {
+		QMessageBox::critical(this, op, tr("%1\n"
+					"此分区用于储存 u-boot，\n"
+					"是非常重要的启动分区。\n"
+					"由于其使用了特殊的 oob 参数，\n"
+					"写入功能暂不支持。").arg(sfin));
+		return;
+	}
+
 	emit enabled(false);
 
 	int in = ::open(sfin.latin1(), O_RDONLY);
