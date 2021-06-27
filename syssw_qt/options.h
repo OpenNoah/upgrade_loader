@@ -8,4 +8,9 @@ class Options: public QWidget
 
 public:
 	Options(QWidget *parent = 0);
+
+private slots:
+	void save();
+	void poweroff();
+	void reboot();
 };
