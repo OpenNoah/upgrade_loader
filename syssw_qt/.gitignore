@@ -1,2 +1,7 @@
 syssw
 *.o
+moc_*.cpp
+nanddump
+nandwrite
+nandwrite_mlc
+flash_eraseall

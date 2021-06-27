@@ -1,5 +1,6 @@
-SRC	:= main.cpp mainw.cpp cgucontrol.cpp regs.cpp bootdialog.cpp boot.cpp
-HDR	:= mainw.h cgucontrol.h regs.h bootdialog.h boot.h
+SRC	:= main.cpp mainw.cpp cgucontrol.cpp regs.cpp bootdialog.cpp boot.cpp options.cpp \
+	   backup.cpp backup_nanddump.cpp backup_eraseall.cpp backup_nandwrite.cpp
+HDR	:= mainw.h cgucontrol.h regs.h bootdialog.h boot.h options.h backup.h
 TRG	:= syssw
 
 MOC_SRC	:= $(HDR:%.h=moc_%.cpp)
@@ -9,7 +10,8 @@ TOP	?= $(CURDIR)/../../build/qt-2.3.10
 INC	+= -I$(TOP)/include -I$(TOP)/src/3rdparty/freetype/include
 LIB	+= -L$(TOP)/lib -Wl,-rpath,/opt/qt-2.3.10/lib -lqte
 DEF	+= -DQWS -D_REENTRANT
-FLAGS	?= -Os -pipe -fno-rtti
+CFLAGS	= -Os -pipe -D_FILE_OFFSET_BITS=64
+FLAGS	?= -Os -pipe -fno-rtti -D_FILE_OFFSET_BITS=64
 CROSS	?= mipsel-linux-
 MOC	?= ../../bin/moc
 
@@ -22,6 +24,9 @@ send: $(TRG)
 
 $(TRG): $(SRC:%.cpp=%.o)
 	$(CROSS)g++ -s -o $@ $^ $(LIB) $(FLAGS)
+
+nanddump nandwrite flash_eraseall: %: %.c crc32.c
+	$(CROSS)gcc -s -o $@ $^ $(CFLAGS)
 
 %.o: %.cpp
 	$(CROSS)g++ -o $@ -c $(INC) $^ $(DEF) $(FLAGS)

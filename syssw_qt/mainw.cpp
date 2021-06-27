@@ -4,6 +4,8 @@
 #include "regs.h"
 #include "boot.h"
 #include "bootdialog.h"
+#include "options.h"
+#include "backup.h"
 
 MainW::MainW(QWidget *parent) : QMainWindow(parent, 0, Qt::WStyle_Customize | Qt::WStyle_NoBorderEx)
 {
@@ -17,8 +19,10 @@ MainW::MainW(QWidget *parent) : QMainWindow(parent, 0, Qt::WStyle_Customize | Qt
 	if (regs->init())
 		tab->addTab(new CGUControl(this), tr("时钟频率"));
 
-	QPushButton *pb = new QPushButton(tr("Hello, world!\n点击退出..."), this);
-	tab->addTab(pb, tr("选项"));
+	Backup *bkp = new Backup(this);
+	tab->addTab(bkp, tr("备份/恢复"));
 
-	connect(pb, SIGNAL(clicked()), qApp, SLOT(quit()));
+	tab->addTab(new Options(this), tr("选项"));
+
+	connect(bkp, SIGNAL(enabled(bool)), this, SLOT(setEnabled(bool)));
 }
