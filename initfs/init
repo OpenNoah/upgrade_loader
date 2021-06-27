@@ -34,13 +34,6 @@ insmod /lib/modules/ubifs.ko
 
 udevstart
 
-# Calibrate touch screen
-if [ ! -f /etc/pointercal ]; then
-	echo 'Calibrate touch screen...' > /dev/tty0
-	rm -f /tmp/pointercal
-	ts_calibrate
-fi
-
 # Wait for SD card
 echo 'Detecting SD card...' > /dev/tty0
 if [ "$(cat /proc/jz/mmc)" == "INSERT" ]; then
@@ -59,6 +52,19 @@ if [ -b /dev/mmcblk0 ]; then
 	for f in /dev/mmcblk0*; do
 		mount $f /mnt/mmc -t vfat -o iocharset=cp936,codepage=936 && break
 	done
+fi
+
+# Check stored calibration
+cal=/mnt/mmc/loaderfs_cfg/pointercal
+if [ -f $cal ]; then
+	cp $cal /tmp/pointercal
+fi
+
+# Calibrate touch screen
+if [ ! -f /tmp/pointercal ]; then
+	echo 'Calibrate touch screen...' > /dev/tty0
+	rm -f /tmp/pointercal
+	ts_calibrate
 fi
 
 # Mount NAND ubi rootfs
