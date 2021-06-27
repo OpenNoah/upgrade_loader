@@ -30,6 +30,7 @@
 #include <mtd/mtd-user.h>
 
 #include <string>
+#include <sstream>
 #include <vector>
 
 #define PROGRAM "nanddump"
@@ -170,6 +171,16 @@ int nanddump_open(std::string &serr, const char *devpath)
 	ofs = start_addr;
 
 	return 0;
+}
+
+std::string moredump_print_info()
+{
+	std::ostringstream ss;
+	ss << "size = " << meminfo.size << "\n";
+	ss << "erasesize = " << meminfo.erasesize << "\n";
+	ss << "writesize = " << meminfo.writesize << "\n";
+	ss << "oobsize = " << meminfo.oobsize << "\n";
+	return ss.str();
 }
 
 int nanddump_dump(std::string &serr, std::vector<char> &dump_buf)

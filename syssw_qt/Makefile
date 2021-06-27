@@ -10,7 +10,7 @@ TOP	?= $(CURDIR)/../../build/qt-2.3.10
 INC	+= -I$(TOP)/include -I$(TOP)/src/3rdparty/freetype/include
 LIB	+= -L$(TOP)/lib -Wl,-rpath,/opt/qt-2.3.10/lib -lqte
 DEF	+= -DQWS -D_REENTRANT
-CFLAGS	= -Os -pipe -D_FILE_OFFSET_BITS=64
+CFLAGS	:= -Os -pipe -D_FILE_OFFSET_BITS=64
 FLAGS	?= -Os -pipe -fno-rtti -D_FILE_OFFSET_BITS=64
 CROSS	?= mipsel-linux-
 MOC	?= ../../bin/moc

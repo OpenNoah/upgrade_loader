@@ -1,3 +1,8 @@
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
 #include <cstdlib>
 #include <string>
 #include <vector>
@@ -93,17 +98,19 @@ void Backup::process(QString op, QString sfin, QString sfout, uint32_t size)
 {
 	emit enabled(false);
 
-	QFile in(sfin);
-	QFile out(sfout);
-
-	if (!in.open(IO_ReadOnly)) {
-		QMessageBox::critical(this, op, tr("无法打开文件:\n%1").arg(in.name()));
+	int in = ::open(sfin.latin1(), O_RDONLY);
+	if (in < 0) {
+		QMessageBox::critical(this, op, tr("无法打开文件:\n%1\n%2")
+				.arg(sfin).arg(strerror(errno)));
 		emit enabled(true);
 		return;
 	}
 
-	if (!out.open(IO_WriteOnly)) {
-		QMessageBox::critical(this, op, tr("无法打开文件:\n%1").arg(out.name()));
+	int out = ::open(sfout.latin1(), O_WRONLY | O_CREAT | O_TRUNC);
+	if (out < 0) {
+		::close(in);
+		QMessageBox::critical(this, op, tr("无法打开文件:\n%1\n%2")
+				.arg(sfout).arg(strerror(errno)));
 		emit enabled(true);
 		return;
 	}
@@ -115,19 +122,19 @@ void Backup::process(QString op, QString sfin, QString sfout, uint32_t size)
 	uint32_t bsz = size / 1024 < BUFFER_SIZE ? SMALL_BUFFER_SIZE : BUFFER_SIZE;
 	uint32_t tsize = 0;
 	for (;;) {
-		int len = in.readBlock(buf, bsz);
+		int len = ::read(in, buf, bsz);
 		if (len < 0) {
 			QMessageBox::critical(this, op, tr("无法读取文件:\n%1\n%2 @ %3")
-					.arg(in.name()).arg(len).arg(tsize));
+					.arg(sfin).arg(len).arg(tsize));
 			break;
 		} else if (len == 0) {
 			break;
 		}
 
-		int wlen = out.writeBlock(buf, len);
+		int wlen = ::write(out, buf, len);
 		if (wlen != len) {
 			QMessageBox::critical(this, op, tr("无法写入文件:\n%1\n%2 @ %3")
-					.arg(out.name()).arg(wlen).arg(tsize));
+					.arg(sfout).arg(wlen).arg(tsize));
 			break;
 		}
 
@@ -138,6 +145,8 @@ void Backup::process(QString op, QString sfin, QString sfout, uint32_t size)
 		qApp->processEvents();
 	}
 
+	::close(in);
+	::close(out);
 	pbProgress->setProgress(pbProgress->totalSteps());
 	QMessageBox::information(this, op, tr("%1完成\n总计 %2 字节").arg(op).arg(tsize));
 
@@ -167,17 +176,19 @@ void Backup::verify()
 		return;
 	}
 
-	QFile in(sfin);
-	QFile out(sfout);
-
-	if (!in.open(IO_ReadOnly)) {
-		QMessageBox::critical(this, op, tr("无法打开文件:\n%1").arg(in.name()));
+	int in = ::open(sfin.latin1(), O_RDONLY);
+	if (in < 0) {
+		QMessageBox::critical(this, op, tr("无法打开文件:\n%1\n%2")
+				.arg(sfin).arg(strerror(errno)));
 		emit enabled(true);
 		return;
 	}
 
-	if (!out.open(IO_ReadOnly)) {
-		QMessageBox::critical(this, op, tr("无法打开文件:\n%1").arg(out.name()));
+	int out = ::open(sfout.latin1(), O_WRONLY | O_CREAT | O_TRUNC);
+	if (out < 0) {
+		::close(in);
+		QMessageBox::critical(this, op, tr("无法打开文件:\n%1\n%2")
+				.arg(sfout).arg(strerror(errno)));
 		emit enabled(true);
 		return;
 	}
@@ -189,23 +200,23 @@ void Backup::verify()
 	uint32_t bsz = size / 1024 < BUFFER_SIZE ? SMALL_BUFFER_SIZE : BUFFER_SIZE;
 	uint32_t tsize = 0;
 	for (;;) {
-		int len = in.readBlock(buf[0], bsz);
+		int len = ::read(in, buf[0], bsz);
 		if (len < 0) {
 			QMessageBox::critical(this, op, tr("无法读取文件:\n%1\n%2 @ %3")
-					.arg(in.name()).arg(len).arg(tsize));
+					.arg(sfin).arg(len).arg(tsize));
 			break;
 		} else if (len == 0) {
 			break;
 		}
 
-		int wlen = out.readBlock(buf[1], len);
+		int wlen = ::read(out, buf[1], len);
 		if (wlen < 0) {
 			QMessageBox::critical(this, op, tr("无法读取文件:\n%1\n%2 @ %3")
-					.arg(out.name()).arg(wlen).arg(tsize));
+					.arg(sfout).arg(wlen).arg(tsize));
 			break;
 		} else if (wlen != len) {
 			QMessageBox::critical(this, op, tr("文件不完整:\n%1\n%2 @ %3")
-					.arg(out.name()).arg(wlen).arg(tsize));
+					.arg(sfout).arg(wlen).arg(tsize));
 			break;
 		}
 
@@ -217,7 +228,7 @@ void Backup::verify()
 				if (buf[0][ofs] != buf[1][ofs])
 					break;
 			QMessageBox::critical(this, op, tr("验证失败:\n%1\n%2\n%3/%4 @ %5")
-					.arg(in.name()).arg(out.name())
+					.arg(sfin).arg(sfout)
 					.arg((int)(uint8_t)buf[0][ofs])
 					.arg((int)(uint8_t)buf[1][ofs])
 					.arg(tsize - len + ofs));
@@ -230,6 +241,8 @@ void Backup::verify()
 		qApp->processEvents();
 	}
 
+	::close(in);
+	::close(out);
 	pbProgress->setProgress(pbProgress->totalSteps());
 	QMessageBox::information(this, op, tr("%1完成\n读取 %2 字节").arg(op).arg(tsize));
 
@@ -240,20 +253,22 @@ void Backup::nanddump(QString op, QString smtd, QString sfout, uint32_t size)
 {
 	int nanddump_open(std::string &serr, const char *devpath);
 	int nanddump_dump(std::string &serr, std::vector<char> &dump_buf);
+	std::string moredump_print_info();
 	void nanddump_close();
 
 	emit enabled(false);
 
-	QFile out(sfout);
-
-	if (!out.open(IO_WriteOnly)) {
-		QMessageBox::critical(this, op, tr("无法打开文件:\n%1").arg(out.name()));
+	int out = ::open(sfout.latin1(), O_WRONLY | O_CREAT | O_TRUNC);
+	if (out < 0) {
+		QMessageBox::critical(this, op, tr("无法打开文件:\n%1\n%2")
+				.arg(sfout).arg(strerror(errno)));
 		emit enabled(true);
 		return;
 	}
 
 	std::string serr;
 	if (nanddump_open(serr, smtd.latin1()) != 0) {
+		::close(out);
 		QMessageBox::critical(this, op, tr("无法打开设备:\n%1\n%2").arg(smtd).arg(serr.c_str()));
 		emit enabled(true);
 		return;
@@ -278,10 +293,10 @@ void Backup::nanddump(QString op, QString smtd, QString sfout, uint32_t size)
 			continue;
 		}
 
-		int wlen = out.writeBlock(&buf.front(), len);
+		int wlen = ::write(out, &buf.front(), len);
 		if (wlen != len) {
 			QMessageBox::critical(this, op, tr("无法写入文件:\n%1\n%2 @ %3")
-					.arg(out.name()).arg(wlen).arg(tsize));
+					.arg(sfout).arg(wlen).arg(tsize));
 			break;
 		}
 
@@ -295,6 +310,15 @@ void Backup::nanddump(QString op, QString smtd, QString sfout, uint32_t size)
 		}
 	}
 
+	// Some extra MTD info
+	QFile info(sfout + ".info");
+	if (info.open(IO_WriteOnly)) {
+		std::string sinfo = moredump_print_info();
+		QTextStream ts(&info);
+		ts << sinfo.c_str();
+	}
+
+	::close(out);
 	nanddump_close();
 	pbProgress->setProgress(pbProgress->totalSteps());
 	QMessageBox::information(this, op, tr("%1完成\nmtd 读取 %2 字节").arg(op).arg(tsize));
@@ -308,16 +332,17 @@ void Backup::nandverify(QString op, QString smtd, QString sfile, uint32_t size)
 	int nanddump_dump(std::string &serr, std::vector<char> &dump_buf);
 	void nanddump_close();
 
-	QFile out(sfile);
-
-	if (!out.open(IO_ReadOnly)) {
-		QMessageBox::critical(this, op, tr("无法打开文件:\n%1").arg(out.name()));
+	int out = ::open(sfile.latin1(), O_RDONLY);
+	if (out < 0) {
+		QMessageBox::critical(this, op, tr("无法打开文件:\n%1\n%2")
+				.arg(sfile).arg(strerror(errno)));
 		emit enabled(true);
 		return;
 	}
 
 	std::string serr;
 	if (nanddump_open(serr, smtd.latin1()) != 0) {
+		::close(out);
 		QMessageBox::critical(this, op, tr("无法打开设备:\n%1\n%2").arg(smtd).arg(serr.c_str()));
 		return;
 	}
@@ -342,14 +367,14 @@ void Backup::nandverify(QString op, QString smtd, QString sfile, uint32_t size)
 		}
 
 		buf[1].resize(len);
-		int wlen = out.readBlock(&buf[1].front(), len);
+		int wlen = ::read(out, &buf[1].front(), len);
 		if (wlen < 0) {
 			QMessageBox::critical(this, op, tr("无法读取文件:\n%1\n%2 @ %3")
-					.arg(out.name()).arg(wlen).arg(tsize));
+					.arg(sfile).arg(wlen).arg(tsize));
 			break;
 		} else if (wlen != len) {
 			QMessageBox::critical(this, op, tr("文件不完整:\n%1\n%2 @ %3")
-					.arg(out.name()).arg(wlen).arg(tsize));
+					.arg(sfile).arg(wlen).arg(tsize));
 			break;
 		}
 
@@ -361,7 +386,7 @@ void Backup::nandverify(QString op, QString smtd, QString sfile, uint32_t size)
 				if (buf[0][ofs] != buf[1][ofs])
 					break;
 			QMessageBox::critical(this, op, tr("验证失败:\n%1\n%2\n%3/%4 @ %5")
-					.arg(smtd).arg(out.name())
+					.arg(smtd).arg(sfile)
 					.arg((int)(uint8_t)buf[0][ofs])
 					.arg((int)(uint8_t)buf[1][ofs])
 					.arg(tsize - len + ofs));
@@ -374,6 +399,8 @@ void Backup::nandverify(QString op, QString smtd, QString sfile, uint32_t size)
 		qApp->processEvents();
 	}
 
+	nanddump_close();
+	::close(out);
 	pbProgress->setProgress(pbProgress->totalSteps());
 	QMessageBox::information(this, op, tr("%1完成\nmtd 读取 %2 字节").arg(op).arg(tsize));
 }
@@ -434,21 +461,23 @@ void Backup::nandwrite(QString op, QString sfin, QString smtd, uint32_t size)
 
 	emit enabled(false);
 
-	QFile in(sfin);
-
-	if (!in.open(IO_ReadOnly)) {
-		QMessageBox::critical(this, op, tr("无法打开文件:\n%1").arg(in.name()));
+	int in = ::open(sfin.latin1(), O_RDONLY);
+	if (in < 0) {
+		QMessageBox::critical(this, op, tr("无法打开文件:\n%1\n%2")
+				.arg(sfin).arg(strerror(errno)));
 		emit enabled(true);
 		return;
 	}
 
 	if (!eraseall(op, sfin, smtd, size)) {
+		::close(in);
 		emit enabled(true);
 		return;
 	}
 
 	std::string serr;
 	if (nandwrite_open(serr, smtd.latin1()) != 0) {
+		::close(in);
 		QMessageBox::critical(this, op, tr("无法打开设备:\n%1\n%2").arg(smtd).arg(serr.c_str()));
 		emit enabled(true);
 		return;
@@ -466,10 +495,10 @@ void Backup::nandwrite(QString op, QString sfin, QString smtd, uint32_t size)
 
 	for (;;) {
 		buf.resize(page);
-		int len = in.readBlock(&buf.front(), page);
+		int len = ::read(in, &buf.front(), page);
 		if (len < 0) {
 			QMessageBox::critical(this, op, tr("无法读取文件:\n%1\n%2 @ %3")
-					.arg(in.name()).arg(len).arg(tsize));
+					.arg(sfin).arg(len).arg(tsize));
 			break;
 		} else if (len == 0) {
 			break;
@@ -497,6 +526,7 @@ void Backup::nandwrite(QString op, QString sfin, QString smtd, uint32_t size)
 		}
 	}
 
+	::close(in);
 	nandwrite_close();
 	pbProgress->setProgress(pbProgress->totalSteps());
 	QMessageBox::information(this, op, tr("%1完成\nmtd 写入 %2 字节").arg(op).arg(tsize));
