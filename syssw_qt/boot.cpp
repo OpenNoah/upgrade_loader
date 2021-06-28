@@ -1,7 +1,11 @@
+#include <sys/types.h>
+#include <dirent.h>
 #include <stdint.h>
 #include <string.h>
 #include "boot.h"
 #include "bootdialog.h"
+
+#include <iostream>
 
 Boot::Boot(QWidget *parent): QWidget(parent)
 {
@@ -16,38 +20,58 @@ Boot::Boot(QWidget *parent): QWidget(parent)
 		offsets.append(0);
 	}
 
-	QList<QDir> ext2;
-	ext2.setAutoDelete(true);
-	ext2.append(new QDir("/dev", "mmcblk*", QDir::Name, QDir::System));
-	ext2.append(new QDir("/mnt/mmc", "rootfs*.img", QDir::Name, QDir::Files));
-	ext2.append(new QDir("/mnt/mmc/rootfs", "*.img", QDir::Name, QDir::Files));
-	for (QDir *dir = ext2.first(); dir != 0; dir = ext2.next()) {
-		const QFileInfoList *list = dir->entryInfoList();
-		if (list == 0)
+	static struct {
+		const char * const dir;
+		QRegExp match;
+	} ext2list[] = {
+		{"/dev", QRegExp("mmcblk.*")},
+		{"/mnt/mmc", QRegExp("rootfs.*\\.img")},
+		{"/mnt/mmc/rootfs", QRegExp(".*\\.img")},
+		{0, QRegExp()},
+	};
+	for (int i = 0; ext2list[i].dir != 0; i++) {
+		DIR *dir;
+		struct dirent *ent;
+		if ((dir = opendir(ext2list[i].dir)) == 0)
 			continue;
-		QFileInfo *fi;
-		for (QFileInfoListIterator it(*list); (fi=it.current()); ++it) {
-			QString path(fi->absFilePath());
-			cmd = QString("mount -t ext2 %1 /mnt/root").arg(path);
+		while ((ent = readdir(dir)) != 0) {
+			QString fname(ent->d_name);
+			if (fname.startsWith("."))
+				continue;
+			if (ext2list[i].match.find(fname, 0) == -1)
+				continue;
+			QString path(QString("%1/%2").arg(ext2list[i].dir).arg(fname));
+			cmd = QString("mount -t ext2 -o noatime %1 /mnt/root").arg(path);
 			if (BootDialog::BootCheck(cmd)) {
 				names << path;
 				mounts << cmd;
 				offsets.append(0);
 			}
 		}
+		closedir(dir);
 	}
 
-	QList<QDir> upd;
-	upd.setAutoDelete(true);
-	upd.append(new QDir("/mnt/mmc", "upgrade*.bin", QDir::Name, QDir::Files));
-	upd.append(new QDir("/mnt/mmc", "rootfs*.bin", QDir::Name, QDir::Files));
-	for (QDir *dir = upd.first(); dir != 0; dir = upd.next()) {
-		const QFileInfoList *list = dir->entryInfoList();
-		if (list == 0)
+	static struct {
+		const char * const dir;
+		QRegExp match;
+	} updlist[] = {
+		{"/mnt/mmc", QRegExp("upgrade.*\\.bin")},
+		{"/mnt/mmc", QRegExp("rootfs.*\\.bin")},
+		{"/mnt/mmc/rootfs", QRegExp(".*\\.bin")},
+		{0, QRegExp()},
+	};
+	for (int i = 0; updlist[i].dir != 0; i++) {
+		DIR *dir;
+		struct dirent *ent;
+		if ((dir = opendir(updlist[i].dir)) == 0)
 			continue;
-		QFileInfo *fi;
-		for (QFileInfoListIterator it(*list); (fi=it.current()); ++it) {
-			QString path(fi->absFilePath());
+		while ((ent = readdir(dir)) != 0) {
+			QString fname(ent->d_name);
+			if (fname.startsWith("."))
+				continue;
+			if (updlist[i].match.find(fname, 0) == -1)
+				continue;
+			QString path(QString("%1/%2").arg(updlist[i].dir).arg(fname));
 			unsigned long off = offset(path);
 			if (off == 0)
 				continue;
@@ -58,6 +82,7 @@ Boot::Boot(QWidget *parent): QWidget(parent)
 				offsets.append(off);
 			}
 		}
+		closedir(dir);
 	}
 
 	for (unsigned int i = 0; i < names.count(); i++)

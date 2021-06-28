@@ -40,7 +40,7 @@ BootDialog::BootDialog(QString cmd, unsigned long offset, bool ro, QWidget *pare
 			pbClose->show();
 			return;
 		}
-		if (system("mount -t ext2 -o ro " LOOP_DEV " /mnt/root") != 0) {
+		if (system("mount -t ext2 -o ro,noatime " LOOP_DEV " /mnt/root") != 0) {
 			system("losetup -d " LOOP_DEV);
 			INFO(tr("环回设备挂载失败"));
 			pbClose->show();
@@ -92,13 +92,14 @@ void BootDialog::init()
 	inits << "/sbin/init";
 }
 
+#include <iostream>
 bool BootDialog::BootCheck(QString cmd, unsigned long off)
 {
 	if (off != 0) {
 		// loop0 in use by initfs, use loop1
 		if (system(QString("losetup -r -o %1 " LOOP_DEV " %2").arg(off).arg(cmd).local8Bit()) != 0)
 			return false;
-		if (system("mount -t ext2 -o ro " LOOP_DEV " /mnt/root") != 0) {
+		if (system("mount -t ext2 -o ro,noatime " LOOP_DEV " /mnt/root") != 0) {
 			system("losetup -d " LOOP_DEV);
 			return false;
 		}

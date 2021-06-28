@@ -184,7 +184,7 @@ void Backup::verify()
 		return;
 	}
 
-	int out = ::open(sfout.latin1(), O_WRONLY | O_CREAT | O_TRUNC);
+	int out = ::open(sfout.latin1(), O_RDONLY);
 	if (out < 0) {
 		::close(in);
 		QMessageBox::critical(this, op, tr("无法打开文件:\n%1\n%2")
@@ -202,8 +202,8 @@ void Backup::verify()
 	for (;;) {
 		int len = ::read(in, buf[0], bsz);
 		if (len < 0) {
-			QMessageBox::critical(this, op, tr("无法读取文件:\n%1\n%2 @ %3")
-					.arg(sfin).arg(len).arg(tsize));
+			QMessageBox::critical(this, op, tr("无法读取文件:\n%1\n%2 @ %3\n%4")
+					.arg(sfin).arg(len).arg(tsize).arg(strerror(errno)));
 			break;
 		} else if (len == 0) {
 			break;
@@ -211,8 +211,8 @@ void Backup::verify()
 
 		int wlen = ::read(out, buf[1], len);
 		if (wlen < 0) {
-			QMessageBox::critical(this, op, tr("无法读取文件:\n%1\n%2 @ %3")
-					.arg(sfout).arg(wlen).arg(tsize));
+			QMessageBox::critical(this, op, tr("无法读取文件:\n%1\n%2 @ %3\n%4")
+					.arg(sfout).arg(wlen).arg(tsize).arg(strerror(errno)));
 			break;
 		} else if (wlen != len) {
 			QMessageBox::critical(this, op, tr("文件不完整:\n%1\n%2 @ %3")
