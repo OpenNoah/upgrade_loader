@@ -57,6 +57,7 @@ Backup::Backup(QWidget *parent): QWidget(parent)
 				ts.readLine();
 				ts >> sinfo;
 				QString name = ts.readLine().stripWhiteSpace();
+				f.close();
 
 				dev_t d;
 				d.blkdev = path;
