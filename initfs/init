@@ -31,6 +31,8 @@ telnetd -l /bin/sh
 # More modules
 insmod /lib/modules/ubi.ko
 insmod /lib/modules/ubifs.ko
+insmod /lib/modules/bdev.ko
+insmod /lib/modules/block-jz.ko
 
 udevstart
 
