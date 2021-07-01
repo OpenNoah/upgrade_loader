@@ -9,10 +9,6 @@
 
 Boot::Boot(QWidget *parent): QWidget(parent)
 {
-	QBoxLayout *lay = new QBoxLayout(this, QBoxLayout::LeftToRight);
-	QVButtonGroup *btns = new QVButtonGroup(this);
-	lay->addWidget(btns);
-
 	QString cmd("mount -t ubifs ubi0:rootfs /mnt/root");
 	if (BootDialog::BootCheck(cmd)) {
 		names << "ubi0:rootfs";
@@ -31,15 +27,23 @@ Boot::Boot(QWidget *parent): QWidget(parent)
 	};
 	for (int i = 0; ext2list[i].dir != 0; i++) {
 		DIR *dir;
-		struct dirent *ent;
 		if ((dir = opendir(ext2list[i].dir)) == 0)
 			continue;
+		QStringList fnames;
+		struct dirent *ent;
 		while ((ent = readdir(dir)) != 0) {
 			QString fname(ent->d_name);
 			if (fname.startsWith("."))
 				continue;
 			if (ext2list[i].match.find(fname, 0) == -1)
 				continue;
+			fnames.append(fname);
+		}
+		closedir(dir);
+		fnames.sort();
+
+		for (QStringList::Iterator it = fnames.begin(); it != fnames.end(); ++it) {
+			QString fname(*it);
 			QString path(QString("%1/%2").arg(ext2list[i].dir).arg(fname));
 			cmd = QString("mount -t ext2 -o noatime %1 /mnt/root").arg(path);
 			if (BootDialog::BootCheck(cmd)) {
@@ -48,7 +52,6 @@ Boot::Boot(QWidget *parent): QWidget(parent)
 				offsets.append(0);
 			}
 		}
-		closedir(dir);
 	}
 
 	static struct {
@@ -62,15 +65,23 @@ Boot::Boot(QWidget *parent): QWidget(parent)
 	};
 	for (int i = 0; updlist[i].dir != 0; i++) {
 		DIR *dir;
-		struct dirent *ent;
 		if ((dir = opendir(updlist[i].dir)) == 0)
 			continue;
+		QStringList fnames;
+		struct dirent *ent;
 		while ((ent = readdir(dir)) != 0) {
 			QString fname(ent->d_name);
 			if (fname.startsWith("."))
 				continue;
 			if (updlist[i].match.find(fname, 0) == -1)
 				continue;
+			fnames.append(fname);
+		}
+		closedir(dir);
+		fnames.sort();
+
+		for (QStringList::Iterator it = fnames.begin(); it != fnames.end(); ++it) {
+			QString fname(*it);
 			QString path(QString("%1/%2").arg(updlist[i].dir).arg(fname));
 			unsigned long off = offset(path);
 			if (off == 0)
@@ -82,16 +93,38 @@ Boot::Boot(QWidget *parent): QWidget(parent)
 				offsets.append(off);
 			}
 		}
-		closedir(dir);
 	}
 
-	for (unsigned int i = 0; i < names.count(); i++)
-		new QPushButton(names[i], btns);
-	connect(btns, SIGNAL(clicked(int)), this, SLOT(boot(int)));
+	QVBoxLayout *lay = new QVBoxLayout(this, 0, 4);
+	if (names.count() <= 7) {
+		QVButtonGroup *btns = new QVButtonGroup(this);
+		lay->addWidget(btns);
+		for (unsigned int i = 0; i < names.count(); i++)
+			new QPushButton(names[i], btns);
+		connect(btns, SIGNAL(clicked(int)), this, SLOT(boot(int)));
+	} else {
+		lb = new QListBox(this);
+		for (unsigned int i = 0; i < names.count(); i++)
+			lb->insertItem(names[i]);
+		lay->addWidget(lb);
+		QPushButton *pb = new QPushButton(tr("启动"), this);
+		lay->addWidget(pb);
+		connect(pb, SIGNAL(clicked()), this, SLOT(bootList()));
+	}
 }
 
 void Boot::boot(int id)
 {
+	new BootDialog(mounts[id], offsets[id], true, this);
+}
+
+void Boot::bootList()
+{
+	int id = lb->currentItem();
+	if (id < 0 || id >= names.count()) {
+		QMessageBox::warning(this, tr("启动项"), tr("请选择一个启动项"));
+		return;
+	}
 	new BootDialog(mounts[id], offsets[id], true, this);
 }
 
