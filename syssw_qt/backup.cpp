@@ -43,7 +43,7 @@ Backup::Backup(QWidget *parent): QWidget(parent)
 		int num = ts.readLine().toInt();
 		f.close();
 
-		for (int v = 0; v < num; v++) {
+		for (int v = 0; v < 16; v++) {	// VOLID may not be continuous
 			QString path(QString("/dev/ubiblock%1").arg(v));
 			if (!QFile(path).exists())
 				continue;
@@ -66,6 +66,8 @@ Backup::Backup(QWidget *parent): QWidget(parent)
 				d.mtd = false;
 				dev.append(new dev_t(d));
 			}
+			if (--num == 0)
+				break;
 		}
 	}
 
