@@ -1,12 +1,12 @@
 SRC	:= main.cpp mainw.cpp cgucontrol.cpp regs.cpp bootdialog.cpp boot.cpp options.cpp \
-	   backup.cpp backup_nanddump.cpp backup_eraseall.cpp backup_nandwrite.cpp
+	   backup.cpp backup_nanddump.cpp backup_eraseall.cpp backup_nandwrite.cpp lcd_fix.cpp
 HDR	:= mainw.h cgucontrol.h regs.h bootdialog.h boot.h options.h backup.h
 TRG	:= syssw
 
 MOC_SRC	:= $(HDR:%.h=moc_%.cpp)
 SRC	+= $(MOC_SRC)
 
-TOP	?= $(CURDIR)/../../build/qt-2.3.10
+TOP	?= $(CURDIR)/../../build/qt-2.3.10-mt
 INC	+= -I$(TOP)/include -I$(TOP)/src/3rdparty/freetype/include
 LIB	+= -L$(TOP)/lib -Wl,-rpath,/opt/qt-2.3.10/lib -lqte
 DEF	+= -DQWS -D_REENTRANT

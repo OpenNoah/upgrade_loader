@@ -10,6 +10,7 @@ public:
 	Options(QWidget *parent = 0);
 
 private slots:
+	void lcd_fix();
 	void save();
 	void poweroff();
 	void reboot();
